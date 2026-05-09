@@ -1,0 +1,13 @@
+# OS
+.DS_Store
+Thumbs.db
+
+# VS Code extension
+promptup-vscode/node_modules/
+promptup-vscode/*.vsix
+
+# Chrome extension — don't commit generated icons if using generate-icons.html
+# icons/*.png   ← uncomment this if you want to regenerate icons from source
+
+# Claude Code internals
+.claude/

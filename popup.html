@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>PromptUp</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg: #16161e;
+      --surface: #1e1e2e;
+      --surface2: #24243a;
+      --border: #313244;
+      --border-hover: #45475a;
+      --text: #cdd6f4;
+      --subtext: #a6adc8;
+      --muted: #6c7086;
+      --accent: #cba6f7;
+      --accent-dim: rgba(203, 166, 247, 0.12);
+      --green: #a6e3a1;
+      --red: #f38ba8;
+    }
+
+    body {
+      width: 340px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    header {
+      padding: 14px 16px 12px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo {
+      width: 26px;
+      height: 26px;
+      background: var(--accent);
+      border-radius: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    header h1 {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text);
+      letter-spacing: -0.01em;
+    }
+
+    .shortcut-badge {
+      margin-left: auto;
+      font-size: 10px;
+      font-weight: 600;
+      background: var(--surface2);
+      color: var(--muted);
+      padding: 3px 8px;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      background: var(--surface);
+    }
+
+    .tab {
+      flex: 1;
+      padding: 9px 0;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--muted);
+      text-align: center;
+      cursor: pointer;
+      border: none;
+      background: none;
+      border-bottom: 2px solid transparent;
+      transition: color 0.15s, border-color 0.15s;
+      font-family: inherit;
+    }
+
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+    .tab:hover:not(.active) { color: var(--subtext); }
+
+    .panel { display: none; }
+    .panel.active { display: block; }
+
+    .section {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .section-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.09em;
+      color: var(--muted);
+      margin-bottom: 9px;
+    }
+
+    input[type="password"], input[type="text"] {
+      width: 100%;
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 12.5px;
+      padding: 8px 10px;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      font-family: inherit;
+    }
+
+    input:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(203, 166, 247, 0.1);
+    }
+
+    .input-row { display: flex; gap: 8px; }
+    .input-row input { flex: 1; }
+
+    .btn {
+      border: none;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      padding: 8px 14px;
+      transition: opacity 0.15s, background 0.15s;
+      font-family: inherit;
+      white-space: nowrap;
+    }
+
+    .btn-primary { background: var(--accent); color: #1e1e2e; }
+    .btn-primary:hover { opacity: 0.85; }
+    .btn-ghost { background: var(--surface2); color: var(--subtext); border: 1px solid var(--border); }
+    .btn-ghost:hover { border-color: var(--border-hover); color: var(--text); }
+
+    #status {
+      font-size: 11.5px;
+      margin-top: 8px;
+      min-height: 16px;
+      color: var(--green);
+    }
+    #status.error { color: var(--red); }
+
+    /* How it works card */
+    .how-it-works {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px 14px;
+    }
+
+    .how-it-works p {
+      font-size: 12px;
+      color: var(--subtext);
+      line-height: 1.6;
+    }
+
+    .how-it-works strong {
+      color: var(--accent);
+      font-weight: 600;
+    }
+
+    /* History */
+    #history-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 7px;
+      max-height: 320px;
+      overflow-y: auto;
+    }
+
+    #history-list::-webkit-scrollbar { width: 4px; }
+    #history-list::-webkit-scrollbar-thumb { background: var(--border); border-radius: 4px; }
+
+    .history-item {
+      background: var(--surface2);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+
+    .history-item:hover { border-color: var(--accent); }
+
+    .history-original {
+      font-size: 10.5px;
+      color: var(--muted);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .history-enhanced {
+      font-size: 12px;
+      color: var(--text);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-top: 3px;
+      font-weight: 500;
+    }
+
+    .history-footer {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      margin-top: 5px;
+    }
+
+    .history-meta { font-size: 10px; color: var(--muted); }
+
+    .history-mode-badge {
+      font-size: 9.5px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 20px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .copy-hint {
+      margin-left: auto;
+      font-size: 10px;
+      color: var(--muted);
+      opacity: 0;
+      transition: opacity 0.15s;
+    }
+
+    .history-item:hover .copy-hint { opacity: 1; }
+
+    .empty-state {
+      color: var(--muted);
+      font-size: 12px;
+      text-align: center;
+      padding: 20px 0;
+    }
+
+    .history-actions {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .history-count {
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    footer {
+      padding: 9px 16px;
+      font-size: 10px;
+      color: var(--muted);
+      text-align: center;
+      border-top: 1px solid var(--border);
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo">⚡</div>
+  <h1>PromptUp</h1>
+  <span class="shortcut-badge">Ctrl+Shift+E</span>
+</header>
+
+<div class="tabs">
+  <button class="tab active" data-tab="history">History</button>
+  <button class="tab" data-tab="settings">Settings</button>
+</div>
+
+<!-- History tab -->
+<div class="panel active" id="tab-history">
+  <div class="section" style="border-bottom:none">
+    <div class="history-actions">
+      <span class="history-count"><span id="historyCount">0</span> prompts enhanced</span>
+      <button class="btn btn-ghost" id="clearHistory" style="font-size:11px;padding:5px 10px">Clear all</button>
+    </div>
+    <ul id="history-list"><li class="empty-state">No history yet.<br>Press Ctrl+Shift+E on any AI site.</li></ul>
+  </div>
+</div>
+
+<!-- Settings tab -->
+<div class="panel" id="tab-settings">
+  <div class="section">
+    <div class="section-label">Anthropic API Key</div>
+    <div class="input-row">
+      <input type="password" id="apiKey" placeholder="sk-ant-…" autocomplete="off" spellcheck="false" />
+      <button class="btn btn-primary" id="saveKey">Save</button>
+    </div>
+    <div id="status"></div>
+  </div>
+
+  <div class="section" style="border-bottom:none">
+    <div class="section-label">How it works</div>
+    <div class="how-it-works">
+      <p>
+        Press <strong>Ctrl+Shift+E</strong> in any AI chat to open the enhancer.<br><br>
+        Pick a <strong>mode</strong> or write <strong>custom instructions</strong>, then hit Enhance. Review the diff and apply.
+      </p>
+    </div>
+  </div>
+</div>
+
+<footer>Powered by claude-haiku-4-5</footer>
+
+<script src="popup.js"></script>
+</body>
+</html>

@@ -1,0 +1,61 @@
+{
+  "name": "promptup-vscode",
+  "displayName": "PromptUp for Developers",
+  "description": "Enhance coding prompts in-place for AI assistants (Copilot, Claude, Codex) with Ctrl+Shift+E",
+  "version": "1.0.0",
+  "publisher": "promptup",
+  "engines": { "vscode": "^1.85.0" },
+  "categories": ["AI", "Other"],
+  "keywords": ["prompt", "AI", "copilot", "claude", "codex", "prompt engineering"],
+  "activationEvents": [],
+  "main": "./extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "promptup.enhance",
+        "title": "PromptUp: Enhance Prompt"
+      },
+      {
+        "command": "promptup.setApiKey",
+        "title": "PromptUp: Set API Key"
+      },
+      {
+        "command": "promptup.enhanceFromTerminal",
+        "title": "PromptUp: Enhance Prompt (Terminal / Clipboard)"
+      }
+    ],
+    "keybindings": [
+      {
+        "command": "promptup.enhance",
+        "key": "ctrl+shift+e",
+        "mac": "cmd+shift+e",
+        "when": "editorTextFocus"
+      },
+      {
+        "command": "promptup.enhanceFromTerminal",
+        "key": "ctrl+shift+e",
+        "mac": "cmd+shift+e",
+        "when": "terminalFocus"
+      }
+    ],
+    "configuration": {
+      "title": "PromptUp",
+      "properties": {
+        "promptup.apiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Your Anthropic API key (sk-ant-…)"
+        },
+        "promptup.defaultMode": {
+          "type": "string",
+          "default": "default",
+          "enum": ["default", "debug", "generate", "refactor", "review", "tests", "explain", "caveman", "expert"],
+          "description": "Default enhancement mode"
+        }
+      }
+    }
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.85.0"
+  }
+}
