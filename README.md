@@ -73,11 +73,14 @@ promptup/
 
 ### Features
 
-- **In-page picker** — mode selection happens on the page, not in the popup
+- **In-page picker** — mode selection + custom instructions happen on the page, not in the popup
+- **Technique chips** — 8 expert prompting techniques available as one-click chips in the picker (Chain-of-Thought, Role Prompting, Few-Shot, Constraints First, Structured Output, Acceptance Criteria, Self-Verify, Token Compression)
 - **Side-by-side diff** — word-level highlight of what changed before applying
+- **Editable diff** — click ✏️ Edit in the diff view to tweak the enhanced prompt before applying; re-renders the diff with your changes
 - **Prompt history** — last 10 enhanced prompts saved, accessible from popup
 - **Context-aware history** — previous prompts in the session are fed as context so enhancements stay coherent across a conversation
-- **Persistent preferences** — last used mode and custom instruction remembered
+- **Learn tab** — popup teaches 8 expert prompting techniques with explanations, real examples, and a "Use this style" button that sets it as your custom instruction
+- **Persistent preferences** — last used mode and custom instruction remembered across sessions
 - **Toast notifications** — loading / success / error feedback
 
 ---
@@ -158,12 +161,27 @@ The system prompt encodes prompt engineering best practices from research:
 - Adds chain-of-thought instruction for complex modes
 - Uses session history as context for conversation continuity
 
+### Techniques taught in the Learn tab
+
+| Technique | What it does |
+|-----------|-------------|
+| 🧠 Chain-of-Thought | Ask AI to reason step by step before answering |
+| 🎭 Role Prompting | Assign an expert persona before the ask |
+| 📎 Few-Shot | Show 2-3 input→output examples before your request |
+| 🚧 Constraints First | Lead with what NOT to do before stating the task |
+| 📐 Structured Output | Specify exact output format (JSON, table, list) |
+| ✅ Acceptance Criteria | Define what "done" looks like upfront |
+| 🔁 Self-Verify | Ask AI to review and fix its own answer |
+| 🗜️ Token Compression | Strip all filler — minimum effective prompt |
+
+Each technique has a one-click **"Use this style"** button that sets it as your custom instruction, and the same techniques are available as chips directly in the in-page picker.
+
 ---
 
 ## Roadmap
 
 ### Near-term
-- [ ] Prompt templates — save reusable prompts, accessible from Quick Pick
+- [ ] Prompt templates — save reusable prompts, accessible from the picker
 - [ ] History in VS Code — last 10 enhancements accessible from command palette
 - [ ] Auto mode — Claude reads the prompt and picks the best mode automatically
 - [ ] Package VS Code extension as `.vsix` for one-click install
