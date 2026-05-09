@@ -162,7 +162,10 @@ function showDiffModal(original, enhanced, onAccept) {
   modal.innerHTML = `
     <div class="promptup-modal__header">
       <span class="promptup-modal__title">PromptUp — Review Changes</span>
-      <button class="promptup-modal__close" id="promptup-close" title="Cancel">✕</button>
+      <div style="display:flex;align-items:center;gap:8px;margin-left:auto">
+        <button class="promptup-edit-toggle" id="promptup-edit-toggle" title="Edit enhanced prompt">✏️ Edit</button>
+        <button class="promptup-modal__close" id="promptup-close" title="Cancel">✕</button>
+      </div>
     </div>
     <div class="promptup-modal__body">
       <div class="promptup-diff-col">
@@ -170,8 +173,9 @@ function showDiffModal(original, enhanced, onAccept) {
         <div class="promptup-diff-text promptup-diff-text--original" id="promptup-original"></div>
       </div>
       <div class="promptup-diff-col">
-        <div class="promptup-diff-label">Enhanced</div>
+        <div class="promptup-diff-label" id="promptup-enhanced-label">Enhanced</div>
         <div class="promptup-diff-text promptup-diff-text--enhanced" id="promptup-enhanced"></div>
+        <textarea class="promptup-edit-textarea" id="promptup-edit-area" style="display:none"></textarea>
       </div>
     </div>
     <div class="promptup-modal__footer">
@@ -189,12 +193,50 @@ function showDiffModal(original, enhanced, onAccept) {
     document.getElementById("promptup-enhanced")
   );
 
+  // Track current enhanced text (may be edited)
+  let currentEnhanced = enhanced;
+  let editing = false;
+
+  // Edit toggle
+  document.getElementById("promptup-edit-toggle").onclick = () => {
+    editing = !editing;
+    const diffEl = document.getElementById("promptup-enhanced");
+    const editEl = document.getElementById("promptup-edit-area");
+    const label = document.getElementById("promptup-enhanced-label");
+    const toggle = document.getElementById("promptup-edit-toggle");
+
+    if (editing) {
+      editEl.value = currentEnhanced;
+      diffEl.style.display = "none";
+      editEl.style.display = "block";
+      editEl.focus();
+      label.textContent = "Enhanced (editing)";
+      toggle.textContent = "👁 View diff";
+      toggle.classList.add("active");
+    } else {
+      currentEnhanced = editEl.value.trim() || currentEnhanced;
+      // Re-render diff with edited text
+      diffEl.innerHTML = "";
+      renderDiff(original, currentEnhanced, document.getElementById("promptup-original"), diffEl);
+      diffEl.style.display = "block";
+      editEl.style.display = "none";
+      label.textContent = "Enhanced";
+      toggle.textContent = "✏️ Edit";
+      toggle.classList.remove("active");
+    }
+  };
+
   const close = () => removeModal();
   document.getElementById("promptup-close").onclick = close;
   document.getElementById("promptup-cancel").onclick = close;
   document.getElementById("promptup-accept").onclick = () => {
+    // If still in edit mode, grab latest textarea value
+    if (editing) {
+      const editEl = document.getElementById("promptup-edit-area");
+      currentEnhanced = editEl.value.trim() || currentEnhanced;
+    }
     removeModal();
-    onAccept();
+    onAccept(currentEnhanced);
   };
   overlay.addEventListener("click", e => {
     if (e.target === overlay) close();
@@ -203,9 +245,13 @@ function showDiffModal(original, enhanced, onAccept) {
 
   function handleModalKey(e) {
     if (e.key === "Escape") { close(); document.removeEventListener("keydown", handleModalKey); }
-    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+    if (e.key === "Enter" && (e.ctrlKey || e.metaKey) && !editing) {
+      if (editing) {
+        const editEl = document.getElementById("promptup-edit-area");
+        currentEnhanced = editEl.value.trim() || currentEnhanced;
+      }
       removeModal();
-      onAccept();
+      onAccept(currentEnhanced);
       document.removeEventListener("keydown", handleModalKey);
     }
   }
@@ -288,6 +334,17 @@ async function saveToHistory(original, enhanced, mode) {
 
 // ── Picker modal ─────────────────────────────────────────────────────────────
 
+const TECHNIQUES = [
+  { icon: "🧠", name: "Chain-of-Thought", instruction: "Apply chain-of-thought reasoning: ask the AI to think step by step and show its reasoning before giving the final answer." },
+  { icon: "🎭", name: "Role Prompt",       instruction: "Frame this as a role prompt: assign the AI a specific expert persona that best fits the task, then state the request." },
+  { icon: "📎", name: "Few-Shot",          instruction: "Structure this as a few-shot prompt: include 2-3 concrete input→output examples before the actual request so the AI learns the exact pattern expected." },
+  { icon: "🚧", name: "Constraints First", instruction: "Lead with explicit constraints (what NOT to do, what to avoid) before stating the actual task. Put guardrails first." },
+  { icon: "📐", name: "Structured Output", instruction: "Add a structured output requirement: specify the exact format (JSON, table, numbered list, code block) the AI should use for its response." },
+  { icon: "✅", name: "Acceptance Criteria", instruction: "Add acceptance criteria: define what a complete, correct answer looks like so the AI can self-check before responding." },
+  { icon: "🔁", name: "Self-Verify",       instruction: "Add a self-verification step: after producing the answer, the AI should review it for correctness and completeness — and fix any issues found." },
+  { icon: "🗜️", name: "Token-Save",        instruction: "Compress this prompt for maximum token efficiency: strip all filler, pleasantries, redundancy, and unnecessary formatting. Keep only words that change the output." },
+];
+
 const MODES = [
   { id: "default",   icon: "✨", name: "Default",   desc: "Balanced clarity" },
   { id: "concise",   icon: "⚡", name: "Concise",   desc: "Short & direct" },
@@ -321,9 +378,11 @@ function showPickerModal(savedMode, savedCustom, onEnhance) {
         <textarea
           id="promptup-custom-input"
           class="promptup-picker__textarea"
-          placeholder='e.g. "Write it like a PM" or "Add step-by-step reasoning"'
+          placeholder='e.g. "Write it like a PM" or click a technique below'
           maxlength="300"
         >${savedCustom || ""}</textarea>
+        <div class="promptup-picker__techniques-label">Quick techniques — click to apply:</div>
+        <div class="promptup-picker__techniques" id="promptup-techniques"></div>
       </div>
     </div>
     <div class="promptup-modal__footer">
@@ -356,6 +415,24 @@ function showPickerModal(savedMode, savedCustom, onEnhance) {
   });
 
   const customInput = document.getElementById("promptup-custom-input");
+
+  // Render technique chips
+  const techContainer = document.getElementById("promptup-techniques");
+  TECHNIQUES.forEach(t => {
+    const chip = document.createElement("button");
+    chip.className = "promptup-technique-chip";
+    chip.textContent = `${t.icon} ${t.name}`;
+    chip.title = t.instruction;
+    chip.addEventListener("click", () => {
+      customInput.value = t.instruction;
+      // Highlight active chip
+      techContainer.querySelectorAll(".promptup-technique-chip").forEach(c => c.classList.remove("active"));
+      chip.classList.add("active");
+      customInput.focus();
+    });
+    techContainer.appendChild(chip);
+  });
+
   customInput.focus();
 
   const doEnhance = () => {
@@ -410,9 +487,9 @@ function runEnhance(editorResult, mode, customInstruction) {
           return;
         }
         const enhanced = response.enhanced;
-        showDiffModal(text, enhanced, () => {
-          adapter.setText(el, enhanced);
-          saveToHistory(text, enhanced, mode);
+        showDiffModal(text, enhanced, (finalText) => {
+          adapter.setText(el, finalText);
+          saveToHistory(text, finalText, mode);
           showToast("success", "PromptUp: prompt enhanced!");
         });
       }
